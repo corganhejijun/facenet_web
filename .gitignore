@@ -1,3 +1,3 @@
 *.pyc
-/facenet_web/FaceVerify/migrations/*_initial.py
+/facenet_web/FaceVerify/migrations/*.py
 /facenet_web/FaceVerify/20180402-114759

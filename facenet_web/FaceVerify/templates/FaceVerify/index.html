@@ -1,10 +1,9 @@
 <!DOCTYPE html> {% load static %}
 <html>
-
 <head>
     <title>Face Verify</title>
-    <script src="{% static 'FaceVerify/js/jquery-3.3.1.min.js' %}"></script>
     <link rel="stylesheet" href="{% static 'FaceVerify/css/bootstrap.min.css' %}">
+    <script src="{% static 'FaceVerify/js/jquery-3.3.1.min.js' %}"></script>
     <link href="{% static 'FaceVerify/css/fileinput.min.css' %}" media="all" rel="stylesheet" type="text/css" />
     <script src="{% static 'FaceVerify/js/bootstrap.min.js' %}"></script>
     <script src="{% static 'FaceVerify/js/piexif.min.js' %}" type="text/javascript"></script>
@@ -20,44 +19,88 @@
         div.left {
             position: fixed;
             top: 150px;
-            height: 25%;
+            height: 250px;
+            width: 250px;
             left: 10px;
         }
         div.right {
             position: fixed;
-            top: 50%;
-            height: 25%;
+            top: 450px;
+            height: 250px;
+            width: 250px;
             left: 10px;
         }
         div.container {
             position: fixed;
-            top: 10px;
+            top: 150px;
             bottom: 30px;
-            left: 20%;
+            left: 300px;
             right: 10px;
             text-align:center;
             overflow-y: scroll;
         }
+        img {	
+            width: auto;
+            height: auto;
+            max-width: 100%;
+            max-height: 100%;
+        }
+        button#upload {
+            position: fixed;
+            top: 15px;
+            left: 300px;
+        }
+        button#compare {
+            position: fixed;
+            top: 15px;
+            left: 150px;
+        }
+        button#login {
+            position: fixed;
+            top: 15px;
+            left: 350px;
+        }
+        iframe {
+            height: 100%;
+            width: 100%;
+        }
     </style>
     
     <script type="text/javascript">
+        function allowDrop(ev){
+            ev.preventDefault();
+        }
+        function drag(ev){
+            ev.dataTransfer.setData("Text",ev.target.id);
+        }
+        function drop(ev){
+            ev.preventDefault();
+            var data=ev.dataTransfer.getData("Text");
+            if ($(ev.target).is("img"))
+                $(ev.target).attr("src", data);
+            else
+                $(ev.target).children().filter("img").attr("src", data);
+        }
+        function loginStatus(){
+            var login = false;
+            var user = "";
+            {% if user %} login = true; user = "{{user}}"  {% endif %}
+            var text = "登陆";
+            if (login){
+                text = "用户" + user + "退出";
+                $("#login").addClass("btn-danger");
+                $("#login").removeClass("btn-success");
+                $("#login").removeAttr("data-target", "#loginModal");
+            }
+            else {
+                $("#login").removeClass("btn-danger");
+                $("#login").addClass("btn-success");
+                $("#login").attr("data-target", "#loginModal");
+            }
+            $("#login").html(text);
+        }
         $(document).ready(function() {
-            $("img.face-image").click(function(){
-                if (!$("#left")[0].checked && !$("#right")[0].checked)
-                    alert("请先选择左侧或右侧复选框");
-                if ($("#left")[0].checked)
-                    $("#leftImg")[0].src = this.src;
-                if ($("#right")[0].checked)
-                    $("#rightImg")[0].src = this.src;
-            })
-            $("#left").change(function(){
-                if (this.checked)
-                    $("#right")[0].checked = false;
-            })
-            $("#right").change(function(){
-                if (this.checked)
-                    $("#left")[0].checked = false;
-            })
+            loginStatus();
             $("#compare").click(function(){
                 var img1 = $("#leftImg")[0].src;
                 var index = img1.lastIndexOf("/") - 1;
@@ -84,6 +127,9 @@
                     } 
                 });
             })
+            $("#login").click(function(){
+                $("iframe")[0].contentWindow.location.reload();
+            });
         });
     </script>
 </head>
@@ -92,28 +138,23 @@
     <h1>人脸识别</h1>
     <div class="rect container">
         {% for face in faceList %}
-        <img src="/static/{{face}}" class="face-image">
+        <img src="/static/{{face}}" class="face-image" draggable="true" ondragstart="drag(event)">
         {% endfor %}
     </div>
-    <div class="rect left">
-        <div class="checkbox">
-            <label>
-                <input type="checkbox" id="left">请选择图片
-            </label>
-        </div>
+    <div class="rect left" ondrop="drop(event)" ondragover="allowDrop(event)">
+            <label>请将要选择的图片拖到这里</label>
         <img id="leftImg">
     </div>
-    <div class="rect right">
-        <div class="checkbox">
-            <label>
-                <input type="checkbox" id="right">请选择图片
-            </label>
-        </div>
+    <div class="rect right" ondrop="drop(event)" ondragover="allowDrop(event)">
+            <label>请将要选择的图片拖到这里</label>
         <img id="rightImg">
     </div>
     <!-- Button trigger modal -->
-    <button type="button" class="btn btn-primary btn-lg" data-toggle="modal" data-target="#myModal">上传图片</button>
     <button type="button" class="btn btn-success btn-lg" id="compare">对比</button>
+    {% if user %}
+    <button type="button" class="btn btn-primary btn-lg" id="upload" data-toggle="modal" data-target="#myModal">上传图片</button>
+    {% endif %}
+    <button type="button" class="btn btn-danger btn-lg" id="login" data-toggle="modal"></button>
 
     <!-- Modal -->
     <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
@@ -130,6 +171,14 @@
                     <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
                     <button type="button" class="btn btn-primary">上传</button>
                 </div>
+            </div>
+        </div>
+    </div>
+    <!-- Modal -->
+    <div class="modal fade" id="loginModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content" style="height:400px;width:400px">
+                <iframe src="/faceverify/login"></iframe>
             </div>
         </div>
     </div>
