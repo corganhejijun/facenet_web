@@ -1,0 +1,85 @@
+<!DOCTYPE html> {% load static %}
+<html>
+<head>
+    <title>Face Verify</title>
+    <link rel="stylesheet" href="{% static 'FaceVerify/css/bootstrap.min.css' %}">
+    <script src="{% static 'FaceVerify/js/jquery-3.3.1.min.js' %}"></script>
+    <script src="{% static 'FaceVerify/js/bootstrap.min.js' %}"></script>
+</head>
+<style type="text/css">
+</style>
+<script type="text/javascript">
+    $(document).ready(function() {
+        $("#register").click(function(){
+            if ($("#divRepassword").is(":hidden")){
+                $("#login").hide();
+                $("#divRepassword").show();
+                return;
+            }
+            if ($("#password").val() != $("#repassword").val()){
+                $("#errorInfo").html("两次输入密码不一致");
+                $(".alert").removeClass("hide");
+                return;
+            }
+            var username = $("#username").val();
+            if (username.indexOf(" ") > 0 || username.indexOf("'") > 0 || username.indexOf('"') > 0 || username.indexOf("[") > 0 || username.indexOf("]") > 0){
+                $("#errorInfo").html("用户名有非法字符");
+                $(".alert").removeClass("hide");
+                return;
+            }
+            $.ajax({url: 'http://' + window.location.host + "/faceverify/json",
+                data: {func: "register", username: username, password: $("#password").val()},
+                success: function(result){
+                    $(".alert").removeClass("hide");
+                    if (!result.flag){
+                        $("#errorInfo").html("注册失败");
+                        return;
+                    }
+                    $("#errorInfo").html("注册成功");
+                    $("#login").show();
+                    $("#divRepassword").hide();
+                } 
+            });
+        });
+        $(".close").click(function(){
+            $(".alert").addClass("hide");
+        });
+        $("#login").click(function(){
+            $.ajax({url: 'http://' + window.location.host + "/faceverify/json",
+                data: {func: "login", username: $("#username").val(), password: $("#password").val()},
+                success: function(result){
+                    if (!result.flag){
+                        $(".alert").removeClass("hide");
+                        $("#errorInfo").html("登陆失败");
+                        return;
+                    }
+                    alert("登陆成功");
+                } 
+            });
+        });
+    });
+</script>
+<body>
+    <div class="alert alert-warning alert-dismissible hide" role="alert" tabindex="-1">
+        <a class="close">×</a>
+        <strong>Info!</strong>
+        <span id="errorInfo"></span>
+    </div>
+    <div class="well">
+        <div class="form-group">
+            <label for="username">用户名</label>
+            <input type="email" class="form-control" id="username" placeholder="username">
+        </div>
+        <div class="form-group">
+            <label for="password">密码</label>
+            <input type="password" class="form-control" id="password" placeholder="Password">
+        </div>
+        <div class="form-group" hidden="hidden" id="divRepassword">
+            <label for="repassword">确认密码</label>
+            <input type="password" class="form-control" id="repassword" placeholder="Password">
+        </div>
+        <button class="btn btn-primary" id="login">登陆</button>
+        <button class="btn btn-default" id="register">注册</button>
+    </div>
+</body>
+</html>

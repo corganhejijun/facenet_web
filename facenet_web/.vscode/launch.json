@@ -14,6 +14,9 @@
                 "runserver",
                 "--noreload",
             ],
+            "env": {
+                "PYTHONPATH":"${workspaceRoot}"
+            },
             "debugOptions": [
                 "WaitOnAbnormalExit",
                 "WaitOnNormalExit",
