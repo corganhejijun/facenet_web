@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from django.http import JsonResponse
 import os
-from . import compare
+# from . import compare
 
 FACE_SAMPLE = "FaceVerify\\face"
 
