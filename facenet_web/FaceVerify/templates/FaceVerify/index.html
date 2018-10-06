@@ -145,7 +145,11 @@
                             alert("比较失败");
                             return;
                         }
-                        $("#result").html("比较结果:<font color='red'>相似度" + (result.result * 100).toFixed(2) + "%</font>");
+                        var text = " 是同一个人";
+                        if (result.result < 0){
+                            text = " 不是同一个人";
+                        }
+                        $("#result").html("比较结果:<font color='red'>相似度" + (result.result * 100).toFixed(2) + "%</font>" + text);
                     } 
                 });
             })
@@ -172,7 +176,7 @@
     <h1>人脸识别</h1>
     <div class="rect container">
         {% for face in faceList %}
-        <img src="/static/{{face}}" class="face-image" draggable="true" ondragstart="drag(event)">
+        <img src="/faceverify/static/{{face}}" class="face-image" draggable="true" ondragstart="drag(event)">
         {% endfor %}
     </div>
     <div class="result">

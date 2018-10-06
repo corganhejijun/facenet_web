@@ -11,9 +11,22 @@ https://docs.djangoproject.com/en/2.1/ref/settings/
 """
 
 import os
+import tensorflow as tf
+import facenet
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+__tf_graph = tf.Graph()
+TF_SESSION = tf.Session(graph = __tf_graph).__enter__()
+TF_IMAGES_PLACEHOLDER = None
+TF_EMBEDDINGS = None
+TF_PHASE_TRAIN_PLACEHOLDER = None
+with __tf_graph.as_default():
+    facenet.load_model(os.path.join(BASE_DIR, "FaceVerify", "20180402-114759"))
+    # Get input and output tensors
+    TF_IMAGES_PLACEHOLDER = tf.get_default_graph().get_tensor_by_name("input:0")
+    TF_EMBEDDINGS = tf.get_default_graph().get_tensor_by_name("embeddings:0")
+    TF_PHASE_TRAIN_PLACEHOLDER = tf.get_default_graph().get_tensor_by_name("phase_train:0")
 
 
 # Quick-start development settings - unsuitable for production
@@ -23,9 +36,9 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = '3khu75*a1whvs+9r8j!mjyw=h$lo(6n7&j)3=ayvd^klj^f$!y'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*',]
 
 
 # Application definition
@@ -118,4 +131,8 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.1/howto/static-files/
 
-STATIC_URL = '/static/'
+STATIC_URL = '/faceverify/static/'
+
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, "static")
+]

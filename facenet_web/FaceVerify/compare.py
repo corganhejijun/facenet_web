@@ -27,55 +27,45 @@ from __future__ import division
 from __future__ import print_function
 
 from scipy import misc
-import tensorflow as tf
 import numpy as np
 import sys
 import os
 import copy
 import argparse
-import facenet
 import align.detect_face
+from django.conf import settings
+import tensorflow as tf
+import facenet
 
 def compare(image_files):
     result = None
     images = load_and_align_data(image_files, 160, 44, 1.0)
-    with tf.Graph().as_default():
-
-        with tf.Session() as sess:
-      
-            # Load the model
-            facenet.load_model(os.path.join(os.path.dirname(os.path.realpath(__file__)), "20180402-114759"))
     
-            # Get input and output tensors
-            images_placeholder = tf.get_default_graph().get_tensor_by_name("input:0")
-            embeddings = tf.get_default_graph().get_tensor_by_name("embeddings:0")
-            phase_train_placeholder = tf.get_default_graph().get_tensor_by_name("phase_train:0")
+    # Run forward pass to calculate embeddings
+    feed_dict = { settings.TF_IMAGES_PLACEHOLDER: images, settings.TF_PHASE_TRAIN_PLACEHOLDER:False }
+    emb = settings.TF_SESSION.run(settings.TF_EMBEDDINGS, feed_dict=feed_dict)
+    
+    nrof_images = len(image_files)
 
-            # Run forward pass to calculate embeddings
-            feed_dict = { images_placeholder: images, phase_train_placeholder:False }
-            emb = sess.run(embeddings, feed_dict=feed_dict)
-            
-            nrof_images = len(image_files)
-
-            print('Images:')
-            for i in range(nrof_images):
-                print('%1d: %s' % (i, image_files[i]))
-            print('')
-            
-            # Print distance matrix
-            print('Distance matrix')
-            print('    ', end='')
-            for i in range(nrof_images):
-                print('    %1d     ' % i, end='')
-            print('')
-            for i in range(nrof_images):
-                print('%1d  ' % i, end='')
-                for j in range(nrof_images):
-                    dist = np.sqrt(np.sum(np.square(np.subtract(emb[i,:], emb[j,:]))))
-                    print('  %1.4f  ' % dist, end='')
-                    if i != j:
-                        result = dist
-                print('')
+    print('Images:')
+    for i in range(nrof_images):
+        print('%1d: %s' % (i, image_files[i]))
+    print('')
+    
+    # Print distance matrix
+    print('Distance matrix')
+    print('    ', end='')
+    for i in range(nrof_images):
+        print('    %1d     ' % i, end='')
+    print('')
+    for i in range(nrof_images):
+        print('%1d  ' % i, end='')
+        for j in range(nrof_images):
+            dist = np.sqrt(np.sum(np.square(np.subtract(emb[i,:], emb[j,:]))))
+            print('  %1.4f  ' % dist, end='')
+            if i != j:
+                result = dist
+        print('')
     return result
             
             

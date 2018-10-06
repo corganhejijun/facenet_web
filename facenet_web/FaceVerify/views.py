@@ -3,7 +3,7 @@ from django.http import JsonResponse
 import os
 
 from . import compare
-from .models import User
+from .models import User, CompareResult
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth.hashers import check_password
 
@@ -25,6 +25,9 @@ def index(request):
             fileList.append(os.path.join(FACE_SAMPLE, "sample", file))
     return render(request, 'FaceVerify/index.html', {'faceList':fileList, "user": user})
 
+def getSim(distance):
+    return (1.1 - distance) / 1.1
+
 def json(request):
     func = request.GET['func']
     if func == 'compare':
@@ -32,14 +35,23 @@ def json(request):
         data2 = request.GET['data2']
         if (data1 == data2):
             return JsonResponse({'flag': True, 'result': 1})
+        if data1 < data2:
+            t = data2
+            data2 = data1
+            data1 = t
+        compResult = CompareResult.objects.filter(img1=data1, img2=data2).first()
+        if compResult:
+            return JsonResponse({'flag': True, 'result': str(getSim(compResult.distance))})
         baseDir = os.path.join(os.path.dirname(os.path.realpath(__file__)), "static", FACE_SAMPLE)
         path1 = os.path.join(baseDir, data1)
         path2 = os.path.join(baseDir, data2)
         try:
             result = compare.compare([path1, path2])
-            return JsonResponse({'flag': True, 'result': result})
-        except:
-            return JsonResponse({'flag': False})
+            compResult = CompareResult(img1=data1, img2=data2, distance=getSim(result))
+            compResult.save()
+            return JsonResponse({'flag': True, 'result': str(result)})
+        except Exception as err:
+            return JsonResponse({'flag': False, 'result': str(err)})
     elif func == 'register':
         return register(request.GET['username'], request.GET['password'])
     elif func == 'login':
