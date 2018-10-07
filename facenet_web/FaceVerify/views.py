@@ -26,6 +26,8 @@ def index(request):
     return render(request, 'FaceVerify/index.html', {'faceList':fileList, "user": user})
 
 def getSim(distance):
+    if distance < 0:
+        return (-1 + distance) / 1.1
     return (1.1 - distance) / 1.1
 
 def json(request):
@@ -47,9 +49,9 @@ def json(request):
         path2 = os.path.join(baseDir, data2)
         try:
             result = compare.compare([path1, path2])
-            compResult = CompareResult(img1=data1, img2=data2, distance=getSim(result))
+            compResult = CompareResult(img1=data1, img2=data2, distance=result)
             compResult.save()
-            return JsonResponse({'flag': True, 'result': str(result)})
+            return JsonResponse({'flag': True, 'result': str(getSim(result))})
         except Exception as err:
             return JsonResponse({'flag': False, 'result': str(err)})
     elif func == 'register':
