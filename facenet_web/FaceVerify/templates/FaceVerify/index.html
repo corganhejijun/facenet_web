@@ -120,6 +120,40 @@
                 }
             });
         }
+        function calFace(img1, img2, timer){
+            var success = false;
+            $.ajax({url: 'http://' + window.location.host + "/faceverify/json",
+                data: {func: "compare", data1: img1, data2: img2},
+                success: function(result){
+                    if (!result.flag){
+                        alert("比较失败");
+                        return;
+                    }
+                    var text = " 是同一个人";
+                    if (result.result < 0){
+                        text = " 不是同一个人";
+                    }
+                    $("#result").html("比较结果:<font color='red'>相似度" + (result.result * 100).toFixed(2) + "%</font>" + text);
+                    success = true;
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    if (timer < 10){
+                        setTimeout(function(){
+                            calFace(img1, img2, timer + 1);
+                        }, 2000);
+                    } else {
+                        $("#result").html("比较失败");
+                    }
+                },
+                complete: function(jqXHR, textStatus){
+                    if (success || timer >= 10){
+                        $("#compare")[0].disabled = false;
+                        $("#compare")[0].innerHTML = "对比";
+                    }
+                }
+            });
+        }
+
         $(document).ready(function() {
             loginStatus();
             $("#compare").click(function(){
@@ -136,22 +170,7 @@
                 $("#compare")[0].disabled = true;
                 $("#compare")[0].innerHTML = "请等待..."
                 $("#result").html("");
-                $.ajax({url: 'http://' + window.location.host + "/faceverify/json",
-                    data: {func: "compare", data1: img1, data2: img2},
-                    success: function(result){
-                        $("#compare")[0].disabled = false;
-                        $("#compare")[0].innerHTML = "对比";
-                        if (!result.flag){
-                            alert("比较失败");
-                            return;
-                        }
-                        var text = " 是同一个人";
-                        if (result.result < 0){
-                            text = " 不是同一个人";
-                        }
-                        $("#result").html("比较结果:<font color='red'>相似度" + (result.result * 100).toFixed(2) + "%</font>" + text);
-                    } 
-                });
+                calFace(img1, img2, 0);
             })
             $("#login").click(function(){
                 $("iframe")[0].contentWindow.location.reload();
